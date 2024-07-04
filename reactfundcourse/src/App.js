@@ -1,8 +1,10 @@
-import React, { useState } from 'react'
+import React, { useState, useMemo } from 'react'
 import './styles/App.css'
 import PostList from './components/PostList';
 import PostForm from './components/PostForm';
-import MySelect from './components/UI/select/MySelect';
+import PostFilter from './components/PostFilter';
+import MyModal from './components/UI/MyModal/MyModal';
+import CreatePostBtn from './components/UI/button/CreatePostBtn';
 
 function App() {
     const [posts, setPosts] = useState([
@@ -12,40 +14,62 @@ function App() {
         { id: 4, title: 'Java', body: 'Description' },
         { id: 5, title: 'Swift', body: 'Description' },
     ])
-    const [selectedSort, setSelectedSort] = useState('')
+    const [filter, setFilter] = useState({sort: '', query: ''})
+
+    
+
+
     const createPost = (newPost) => {
         setPosts([...posts, newPost])
+        setModal(false)
     }
 
     const removePost = (post) => {
         setPosts(posts.filter(p => p.id !== post.id))
     }
     
-    const sortPosts = (sort) => {
-        setSelectedSort(sort)
-        console.log(sort);
-    }
+    const sortedPosts = useMemo(() => {
+        if (filter.sort) {
+            return [...posts].sort((a, b)=> a[filter.sort].localeCompare(b[filter.sort]))
+        } else return posts
+    }, [filter.sort, posts])
+    
+
+    const sortedAndSearchedPosts = useMemo(() => {
+        return sortedPosts.filter(post => post.title.toLowerCase().includes(filter.query))
+    }, [filter.query, sortedPosts])
         
+    const [modal, setModal] = useState(false)
+
+
+    
     return (
         <div className="App">          
-            <PostForm create={createPost} />   
+            <CreatePostBtn
+                onClick={() => setModal(true)}
+                style={{marginTop: '30px'}}
+            >
+                make a post
+            </CreatePostBtn>
+
+
+            <MyModal visible={modal} setVisible={setModal}>
+                <PostForm create={createPost} />
+            </MyModal>
+               
             <hr style={{margin: '15px 0'}}/>
-            <div>
-                <MySelect
-                    value={selectedSort}
-                    onChange={sortPosts}
-                    defaultValue='Sort by...'
-                    options={[
-                        { value: 'title', name: 'title' },
-                        { value: 'body', name: 'body' }
-                    ]}
-                />              
-            </div>
             
-            {posts.length !== 0
-                ?<PostList remove = {removePost}  posts={posts} title={"List of item 1"} />
-                : <h1 style={{textAlign: 'center'}}>Posts undefined!!!</h1>
-            }
+            <PostFilter
+                filter={filter}
+                setFilter={setFilter}
+            />
+            
+            
+            <PostList remove={removePost}
+                posts={sortedAndSearchedPosts}
+                title={"List of item 1"}
+            />
+            
             
         </div>
     );
