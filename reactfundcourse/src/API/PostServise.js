@@ -11,4 +11,16 @@ export default class PostServise {
         })
         return response
     }
+
+
+    static async getByID(id) {
+        console.log("ID in getByID:", id)
+        const response = await axios.get('https://jsonplaceholder.typicode.com/posts/' + id)
+        return response
+    }
+
+    static async getCommentsByPostID(id) {
+        const response = await axios.get(`https://jsonplaceholder.typicode.com/posts/${id}/comments`)
+        return response
+    }
 }
